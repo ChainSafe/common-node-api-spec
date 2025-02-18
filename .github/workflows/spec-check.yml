@@ -1,0 +1,39 @@
+name: Spec Check
+
+on:
+  pull_request:
+    paths:
+      - 'spec.json'
+      - '../../implementations/forest/**.json'
+      - '../../implementations/lotus/**.json'
+
+env:
+  DOCKER_IMAGE: "ghcr.io/ansermino/openrpc-checker"
+  DOCKER_TAG: "latest"
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v3
+
+      - name: Fetch Docker image
+        run: docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+
+      - name: Run Forest check
+        id: forest-check
+        run: docker run -v "${{ github.workspace }}:/usr/src/app/input" ${{ env.DOCKER_IMAGE }} diff --ref-parser -s "./input/spec.json" -t "./input/forest/doc.json"
+        continue-on-error: true
+
+      - name: Run Lotus check
+        id: lotus-check
+        run: docker run -v "${{ github.workspace }}:/usr/src/app/input" ${{ env.DOCKER_IMAGE }} diff --ref-parser -s "./input/spec.json" -t "./input/lotus/doc.json"
+        continue-on-error: true
+
+      - name: Check results
+        if: steps.forest-check.outcome == 'failure' || steps.lotus-check.outcome == 'failure'
+        run: |
+          echo "Failed checks! See results above."
+          exit 1
