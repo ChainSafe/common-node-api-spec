@@ -4,8 +4,8 @@ on:
   pull_request:
     paths:
       - 'spec.json'
-      - '../../implementations/forest/**.json'
-      - '../../implementations/lotus/**.json'
+      - 'forest/**.json'
+      - 'lotus/**.json'
 
 env:
   DOCKER_IMAGE: "ghcr.io/ansermino/openrpc-checker"
